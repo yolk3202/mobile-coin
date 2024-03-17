@@ -29,16 +29,11 @@ router.beforeEach(async (to: toRouteType, from, next) => {
   useCachedViewStoreHook().addCachedView(to);
   // 页面 title
   setPageTitle(to.meta.title);
-  console.log(":=>to", to.path);
   if (whiteList.indexOf(to.path) !== -1) {
-    console.log(":=>to1");
     next();
   } else {
-    console.log(":=>to2");
     if (!checkIsLogin()) {
-      console.log(":=>to2.2");
       const [err, data] = await getUserInfo();
-      console.log(":=>to2.3", err, data);
       if (err || data.code !== 0) {
         next(`/login?redirect=${to.path}`);
         NProgress.done();

@@ -2,7 +2,8 @@ import Axios, {
   type AxiosInstance,
   type AxiosError,
   type AxiosResponse,
-  type AxiosRequestConfig
+  type AxiosRequestConfig,
+  type AxiosRequestHeaders
 } from "axios";
 import { ContentTypeEnum, ResultEnum } from "@/enums/requestEnum";
 import NProgress from "../progress";
@@ -15,10 +16,11 @@ const configDefault = {
   headers: {
     "Content-Type": ContentTypeEnum.JSON
   },
-  timeout: 0,
+  timeout: 20000,
   baseURL: import.meta.env.VITE_APP_BASE_API,
   data: {}
 };
+console.log('configDefault', configDefault);
 
 class Http {
   // 当前实例
@@ -30,16 +32,18 @@ class Http {
   private httpInterceptorsRequest(): void {
     Http.axiosInstance.interceptors.request.use(
       config => {
-        console.log('config=>:', config)
         NProgress.start();
         // 发送请求前，可在此携带 token
         // if (token) {
         //   config.headers['token'] = token
         // }
-        const token = localStorage.getItem("token");
+        const token = localStorage.getItem("token") || "";
         // 判断当前接口是否需要 添加自定义头部
         if (!noTokenList.includes(config.url as string)) {
-          config.headers = { ...config.headers, Authorization: token };
+          config.headers = {
+            ...config.headers,
+            Authorization: token
+          } as AxiosRequestHeaders;
         }
         return config;
       },
