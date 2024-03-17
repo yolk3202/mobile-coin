@@ -1,5 +1,41 @@
-<script setup lang="ts" name="About"></script>
+<script setup lang="ts" name="About">
+import { storeToRefs } from "pinia";
+import router from "@/router";
+import { useUserStore } from "@/store/modules/user";
+
+const userStore = useUserStore();
+const { userInfo } = storeToRefs(userStore);
+
+const logout = () => {
+  userStore.logout();
+  router.push({ name: "Login" });
+};
+</script>
 
 <template>
-  <div>about</div>
+  <div>
+    <div class="px-[16px] py-[30px]">
+      <!-- <van-image round width="100" height="100" :src="userInfo.avatar" /> -->
+      <div class="text-[16px] font-bold mb-[10px]">用户信息</div>
+      <div class="flex flex-wraps items-center">
+        <div class="flex-1 font-bold">
+          账号: <span class="font-normal">{{ userInfo.phoneName }}</span>
+        </div>
+        <div class="flex-1 font-bold">
+          邮箱: <span class="font-normal">{{ userInfo.email }}</span>
+        </div>
+        <div class="flex-1 font-bold">
+          昵称: <span class="font-normal">{{ userInfo.nickName }}</span>
+        </div>
+      </div>
+    </div>
+    <van-cell-group>
+      <van-cell title="修改密码" is-link to="updatePassword" />
+    </van-cell-group>
+    <div style="margin: 16px">
+      <van-button round block type="primary" @click="logout">
+        退出登录
+      </van-button>
+    </div>
+  </div>
 </template>
