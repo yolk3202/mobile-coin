@@ -32,10 +32,8 @@ const realLoading = ref(false);
 const getRealSrcData = () => {
   // 请求实时数据
   realLoading.value = true;
-  console.log("请求实时数据");
   getCoinApi()
     .then(res => {
-      console.log("请求实时数据", res);
       const { code } = res;
       if (code === 0) {
         realData = {
@@ -43,9 +41,7 @@ const getRealSrcData = () => {
         };
       }
     })
-    .catch(err => {
-      console.log("请求实时数据", err);
-    })
+    .catch(() => {})
     .finally(() => {
       realLoading.value = false;
     });
@@ -79,7 +75,6 @@ const chooseTime = item => {
   curTime.value = value;
   if (value === -1) {
     // 自定义
-    console.log("自定义");
     calendarInfo.submitFlag = false;
     calendarInfo.show = true;
   } else {

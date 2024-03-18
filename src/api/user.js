@@ -11,7 +11,6 @@ export const registryApi = data => {
 
 // 登录
 export const loginApi = data => {
-  console.log('data', data)
   return http.request({
     url: "/api/user/login",
     method: "post",

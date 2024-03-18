@@ -16,18 +16,17 @@ const props = defineProps({
     }
   }
 });
-let apiData = reactive({});
+let apiData = ref([]);
 // 初始化时间是 最近一天数据
 let curInfo = reactive({
   time: "",
-  accVal: "",
-  btcVal: ""
+  vals: []
 });
 
-const checked = ref(false);
+const checked = ref("value");
 const lineOption = reactive({
   legend: {
-    right: 10,
+    left: "center",
     icon: "circle"
   },
   tooltip: {
@@ -36,8 +35,10 @@ const lineOption = reactive({
     axisPointer: { type: "line" },
     formatter: function (params) {
       curInfo.time = params[0].name;
-      curInfo.accVal = params[0].value;
-      curInfo.btcVal = params[1].value;
+      curInfo.vals = [];
+      params.forEach(item => {
+        curInfo.vals.push(item.value);
+      });
       return;
     }
   },
@@ -54,35 +55,40 @@ const lineOption = reactive({
   },
   series: []
 });
-
+const setChartsData = checkedVal => {
+  // 选择 type 与 checkedVal 相同的数据
+  lineOption.series = [];
+  curInfo.vals = [];
+  apiData.value.forEach(item => {
+    if (item.type === checkedVal) {
+      const data = {
+        name: item.name,
+        type: TYPE,
+        data: item.value
+      };
+      curInfo.vals.push(item.value[item.value.length - 1]);
+      lineOption.series.push(data);
+    }
+  });
+};
 const getChartData = ({ startDay, endDay }) => {
   getCoinChartApi({
     startDay,
     endDay
   }).then(res => {
-    console.log("getChartData===>:", res);
     const { code, data } = res;
     if (code === 0) {
-      apiData = reactive({ ...data });
+      apiData.value = [];
+      apiData.value.push(...data.data);
       curInfo.time = data.xdata[data.xdata.length - 1];
-      curInfo.accVal = data.data[0].value[data.data[0].value.length - 1];
-      curInfo.btcVal = data.data[1].value[data.data[1].value.length - 1];
       lineOption.xAxis.data = data.xdata;
-      data.data.forEach((item, index) => {
-        const data = {
-          name: item.name,
-          type: TYPE,
-          data: item.value
-        };
-        lineOption.series.push(data);
-      });
+      setChartsData(checked.value);
     }
   });
 };
 watch(
   () => props.filterDay,
-  (newVal, oldVal) => {
-    console.log("filterDay===>:", newVal, oldVal);
+  newVal => {
     if (newVal.startDay && newVal.endDay) {
       getChartData({ startDay: newVal.startDay, endDay: newVal.endDay });
     }
@@ -90,6 +96,13 @@ watch(
   {
     deep: true,
     immediate: true
+  }
+);
+
+watch(
+  () => checked.value,
+  newVal => {
+    setChartsData(newVal);
   }
 );
 
@@ -122,10 +135,14 @@ const refLineOption = ref(lineOption);
   <div>
     <div class="flex justify-between">
       <div>累计收益<van-icon name="info-o" /></div>
-      <van-switch v-model="checked">
+      <van-switch
+        v-model="checked"
+        :active-value="'value'"
+        :inactive-value="'ratio'"
+      >
         <template #node>
           <div class="leading-8 text-center h-full">
-            {{ checked ? "%" : "$" }}
+            {{ checked === "value" ? "$" : "%" }}
           </div>
         </template>
       </van-switch>
@@ -133,8 +150,9 @@ const refLineOption = ref(lineOption);
     <div>
       <div>{{ curInfo.time }}</div>
       <div class="flex justify-between">
-        <div class="flex-1">{{ curInfo.accVal }}</div>
-        <div class="flex-1">{{ curInfo.btcVal }}</div>
+        <div class="flex-1" v-for="item in curInfo.vals" :key="item">
+          {{ item }}
+        </div>
       </div>
     </div>
     <Chart :option="refLineOption" :style="{ height: '330px' }" />

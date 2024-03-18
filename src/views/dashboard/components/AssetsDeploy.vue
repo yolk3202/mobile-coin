@@ -3,6 +3,7 @@ import { ref, reactive, watch } from "vue";
 import Chart from "@/components/Chart/index.vue";
 import { getCoinDistributionChartApi } from "@/api/coin";
 
+// const TYPE = "pie";
 const props = defineProps({
   filterDay: {
     type: Object,
@@ -71,11 +72,12 @@ const getChartData = ({ startDay, endDay }) => {
     startDay,
     endDay
   }).then(res => {
-    console.log("getChartData===>:11", res);
     const { code, data } = res;
     if (code === 0) {
-      apiData.value = [...data.data];
-      data.data.forEach((item, index) => {
+      apiData.value = [];
+      apiData.value.push(...data.data);
+      pieOption.series[0].data = [];
+      data.data.forEach(item => {
         const data = {
           name: item.name,
           value: parseFloat(item.bal)
@@ -87,8 +89,7 @@ const getChartData = ({ startDay, endDay }) => {
 };
 watch(
   () => props.filterDay,
-  (newVal, oldVal) => {
-    console.log("filterDay===>:", newVal, oldVal);
+  newVal => {
     if (newVal.startDay && newVal.endDay) {
       getChartData({ startDay: newVal.startDay, endDay: newVal.endDay });
     }

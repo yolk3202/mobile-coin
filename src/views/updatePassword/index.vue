@@ -33,9 +33,7 @@ const onSubmitU = () => {
         // 登录失败
       }
     })
-    .catch(err => {
-      console.log("err=>:", err);
-    });
+    .catch(() => {});
 };
 </script>
 <template>

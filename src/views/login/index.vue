@@ -37,18 +37,15 @@ const gotoMainPage = () => {
   router.push({ path: redirect, query: otherQueryParams });
 };
 
-const onSubmit = values => {
-  console.log("submit", values);
+const onSubmit = () => {
   loginApi(loginInfo)
     .then(async res => {
-      console.log("res=>:", res);
       const { code } = res;
       if (code === 0) {
         showNotify({ type: "success", message: "登录成功,即将跳转" });
         userStore.loginSuccess(res.data);
         // 请求信息
-        const [err, data] = await getUserInfo();
-        console.log(err, data);
+        const [, data] = await getUserInfo();
         const { code, data: userInfo } = data;
         if (code === 0) {
           userStore.setUserInfo(userInfo);
@@ -62,30 +59,22 @@ const onSubmit = values => {
         // 登录失败
       }
     })
-    .catch(err => {
-      console.log("err=>:", err);
-    });
+    .catch(() => {});
 };
 
-const onSubmitR = values => {
-  console.log("submit=1", values);
-  console.log("registerInfo=>:", registerInfo);
+const onSubmitR = () => {
   registryApi(registerInfo)
     .then(res => {
-      console.log("res=>:", res);
       const { code } = res;
       if (code === 0) {
         showNotify({ type: "success", message: "注册成功" });
         switchTo("login");
       }
     })
-    .catch(err => {
-      console.log("err=>:", err);
-    });
+    .catch(() => {});
 };
 
 const switchTo = mode => {
-  console.log("type=>:", mode);
   pageType.value = mode;
 };
 </script>

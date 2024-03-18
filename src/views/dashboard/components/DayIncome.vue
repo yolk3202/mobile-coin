@@ -16,12 +16,11 @@ const props = defineProps({
     }
   }
 });
-let apiData = reactive({});
+let apiData = ref([]);
 // 初始化时间是 最近一天数据
 const curInfo = reactive({
   time: "",
-  incomeVal: "",
-  incomeName: ""
+  vals: []
 });
 const lineOption = reactive({
   tooltip: {
@@ -30,8 +29,10 @@ const lineOption = reactive({
     axisPointer: { type: "line" },
     formatter: function (params) {
       curInfo.time = params[0].name;
-      curInfo.incomeVal = params[0].value;
-      curInfo.incomeName = params[0].seriesName;
+      curInfo.vals = [];
+      params.forEach(item => {
+        curInfo.vals.push(item.value);
+      });
       return;
     }
   },
@@ -47,20 +48,21 @@ const getChartData = ({ startDay, endDay }) => {
     startDay,
     endDay
   }).then(res => {
-    console.log("getCoinDayChartApi===>:", res);
     const { code, data } = res;
     if (code === 0) {
-      apiData = reactive({ ...data });
+      apiData.value = [];
+      apiData.value.push(...data.data);
       curInfo.time = data.xdata[data.xdata.length - 1];
-      curInfo.incomeVal = data.data[0].value[data.data[0].value.length - 1];
-      curInfo.incomeName = data.data[0].name;
       lineOption.xAxis.data = data.xdata;
-      data.data.forEach((item, index) => {
+      lineOption.series = [];
+      curInfo.vals = [];
+      data.data.forEach(item => {
         const data = {
           name: item.name,
           type: TYPE,
           data: item.value
         };
+        curInfo.vals.push(item.value[item.value.length - 1]);
         lineOption.series.push(data);
       });
     }
@@ -69,7 +71,7 @@ const getChartData = ({ startDay, endDay }) => {
 
 watch(
   () => props.filterDay,
-  (newVal, oldVal) => {
+  newVal => {
     if (newVal.startDay && newVal.endDay) {
       getChartData({ startDay: newVal.startDay, endDay: newVal.endDay });
     }
@@ -91,7 +93,9 @@ const refBarOption = ref(lineOption);
       <div>{{ curInfo.time }}</div>
       <div>当日收益</div>
       <div class="flex justify-between">
-        <div class="flex-1">{{ curInfo.incomeVal }}</div>
+        <div class="flex-1" v-for="item in curInfo.vals" :key="item">
+          {{ item }}
+        </div>
       </div>
     </div>
     <Chart :option="refBarOption" :style="{ height: '330px' }" />

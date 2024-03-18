@@ -16,7 +16,6 @@ export const useUserStore = defineStore({
   actions: {
     // 登录成功，更新信息
     loginSuccess(token: string) {
-      console.log("token", token);
       localStorage.setItem("token", token);
       this.token = token;
       this.hasLogin = true;
