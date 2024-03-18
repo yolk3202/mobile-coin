@@ -1,5 +1,6 @@
 <script setup>
 import { ref, reactive, watch } from "vue";
+import { useDarkMode } from "@/hooks/useToggleDarkMode";
 import Chart from "@/components/Chart/index.vue";
 import { getCoinChartApi } from "@/api/coin";
 
@@ -35,10 +36,23 @@ const lineOption = reactive({
     axisPointer: { type: "line" },
     formatter: function (params) {
       curInfo.time = params[0].name;
+      let unit = "";
+      for (let i = 0; i < apiData.value.length; i += 1) {
+        const item = apiData.value[i];
+        if (item.name === params[0].seriesName) {
+          unit = item.unit;
+        }
+      }
       curInfo.vals = [];
-      params.forEach(item => {
-        curInfo.vals.push(item.value);
-      });
+      if (unit === "%") {
+        params.forEach(item => {
+          curInfo.vals.push(`${item.value}${unit}`);
+        });
+      } else {
+        params.forEach(item => {
+          curInfo.vals.push(`${unit}${item.value}`);
+        });
+      }
       return;
     }
   },
@@ -51,7 +65,15 @@ const lineOption = reactive({
     }
   },
   yAxis: {
-    type: "value"
+    type: "value",
+    min: "auto",
+    max: "auto"
+  },
+  grid: {
+    left: "3%",
+    right: "3%",
+    bottom: "3%",
+    containLabel: true
   },
   series: []
 });
@@ -59,6 +81,8 @@ const setChartsData = checkedVal => {
   // 选择 type 与 checkedVal 相同的数据
   lineOption.series = [];
   curInfo.vals = [];
+  // 收集所有数据
+  let arr = [];
   apiData.value.forEach(item => {
     if (item.type === checkedVal) {
       const data = {
@@ -66,9 +90,16 @@ const setChartsData = checkedVal => {
         type: TYPE,
         data: item.value
       };
-      curInfo.vals.push(item.value[item.value.length - 1]);
+      arr.push(...item.value);
+      if (item.unit === "%") {
+        curInfo.vals.push(`${item.value[item.value.length - 1]}${item.unit}`);
+      } else {
+        curInfo.vals.push(`${item.unit}${item.value[item.value.length - 1]}`);
+      }
       lineOption.series.push(data);
     }
+    lineOption.yAxis.min = Math.min(...arr);
+    lineOption.yAxis.max = Math.max(...arr);
   });
 };
 const getChartData = ({ startDay, endDay }) => {
@@ -141,7 +172,10 @@ const refLineOption = ref(lineOption);
         :inactive-value="'ratio'"
       >
         <template #node>
-          <div class="leading-8 text-center h-full">
+          <div
+            class="leading-8 text-center h-full"
+            :class="useDarkMode() ? 'text-slate-400' : 'text-slate-800'"
+          >
             {{ checked === "value" ? "$" : "%" }}
           </div>
         </template>

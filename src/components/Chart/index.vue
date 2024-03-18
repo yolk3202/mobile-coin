@@ -38,10 +38,10 @@ function initChart() {
       isRealDark.value ? "dark-chart" : "light-chart"
     );
     chart.setOption(props.option);
-    chart.on("click", function (params) {
-      // 控制台打印数据的名称
-      console.log("点击", params, params.name);
-    });
+    // chart.on("click", function (params) {
+    //   // 控制台打印数据的名称
+    //   console.log("点击", params, params.name);
+    // });
     addListener(chartDom.value, resize);
   }
 }

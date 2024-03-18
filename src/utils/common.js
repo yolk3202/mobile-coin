@@ -9,3 +9,9 @@ export const to = (promise, errorExt) => {
       return [err, undefined];
     });
 };
+
+// 识别浮点数的小数位数
+export const countDecimals = value => {
+  if (Math.floor(value) === value) return 0;
+  return value.toString().split(".")[1].length || 0;
+};

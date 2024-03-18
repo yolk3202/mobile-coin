@@ -29,9 +29,16 @@ const lineOption = reactive({
     axisPointer: { type: "line" },
     formatter: function (params) {
       curInfo.time = params[0].name;
+      let unit = "";
+      for (let i = 0; i < apiData.value.length; i += 1) {
+        const item = apiData.value[i];
+        if (item.name === params[0].seriesName) {
+          unit = item.unit;
+        }
+      }
       curInfo.vals = [];
       params.forEach(item => {
-        curInfo.vals.push(item.value);
+        curInfo.vals.push(`${unit}${item.value}`);
       });
       return;
     }
@@ -41,7 +48,9 @@ const lineOption = reactive({
     data: []
   },
   yAxis: {
-    type: "value"
+    type: "value",
+    min: "auto",
+    max: "auto"
   },
   series: []
 });
@@ -59,15 +68,20 @@ const getChartData = ({ startDay, endDay }) => {
       lineOption.xAxis.data = data.xdata;
       lineOption.series = [];
       curInfo.vals = [];
+      // 收集所有数据
+      let arr = [];
       data.data.forEach(item => {
         const data = {
           name: item.name,
           type: TYPE,
           data: item.value
         };
-        curInfo.vals.push(item.value[item.value.length - 1]);
+        arr.push(...item.value);
+        curInfo.vals.push(`${item.unit}${item.value[item.value.length - 1]}`);
         lineOption.series.push(data);
       });
+      lineOption.yAxis.min = Math.min(...arr);
+      lineOption.yAxis.max = Math.max(...arr);
     }
   });
 };

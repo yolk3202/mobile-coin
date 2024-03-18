@@ -2,6 +2,7 @@
 import { ref, reactive, watch } from "vue";
 import Chart from "@/components/Chart/index.vue";
 import { getCoinDistributionChartApi } from "@/api/coin";
+import { countDecimals } from "@/utils/common";
 
 // const TYPE = "pie";
 const props = defineProps({
@@ -24,6 +25,7 @@ const pieOption = reactive({
   },
   legend: {
     left: "center",
+    bottom: 10,
     formatter: function (name) {
       let tarValue;
       for (let i = 0; i < apiData.value.length; i += 1) {
@@ -38,7 +40,8 @@ const pieOption = reactive({
   series: [
     {
       type: "pie",
-      radius: ["40%", "70%"],
+      minAngle: 5,
+      radius: ["50%", "60%"],
       avoidLabelOverlap: false,
       itemStyle: {
         borderRadius: 10,
@@ -47,16 +50,38 @@ const pieOption = reactive({
       },
       label: {
         show: false,
-        position: "center"
+        position: "center",
+        fontSize: 16,
+        fontWeight: "bold",
+        formatter: function () {
+          let str = "≈";
+          let acc = 0;
+          let unit = "";
+          let decimals = 0;
+          // 计算总和
+          apiData.value.forEach(item => {
+            decimals = Math.max(decimals, countDecimals(item.valuation));
+            acc = parseFloat(acc + parseFloat(item.valuation));
+            unit = item.unit;
+          });
+          str = "≈" + unit + acc.toFixed(decimals);
+          return "总额" + "\n" + str;
+        }
       },
       emphasis: {
+        scaleSize: 10,
         label: {
           show: true,
-          fontSize: 16,
           formatter: function (params) {
-            return params.name + "\n =" + params.value;
-          },
-          fontWeight: "bold"
+            let str = "≈";
+            for (let i = 0; i < apiData.value.length; i += 1) {
+              const cur = apiData.value[i];
+              if (cur && cur.name === params.name) {
+                str = "≈" + cur.unit + cur.valuation;
+              }
+            }
+            return params.name + "\n" + params.value + "\n" + str;
+          }
         }
       },
       labelLine: {

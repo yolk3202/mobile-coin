@@ -9,7 +9,7 @@ import AssetsTrend from "./components/AssetsTrend.vue";
 import moment from "moment";
 
 const actions = [{ name: "总揽" }, { name: "总揽1" }, { name: "总揽2" }];
-const value1 = ref("总揽");
+const value1 = ref("总览");
 const show = ref(false);
 const onSelect = item => {
   // 默认情况下点击选项时不会自动收起
@@ -105,8 +105,9 @@ onMounted(() => {
     <div class="mb-[16px]">
       <div class="flex items-center justify-between">
         <div class="text-1xl font-bold mb-[10px] mt-[10px] pl-[8px]">
-          {{ value1 }}<van-icon class="pl-[4px]" name="arrow-down" />
+          {{ value1 }}
         </div>
+        <!-- <van-icon class="pl-[4px]" name="arrow-down" /> -->
       </div>
       <van-action-sheet
         v-model:show="show"

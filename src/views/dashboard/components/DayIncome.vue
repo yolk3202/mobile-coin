@@ -29,9 +29,16 @@ const lineOption = reactive({
     axisPointer: { type: "line" },
     formatter: function (params) {
       curInfo.time = params[0].name;
+      let unit = "";
+      for (let i = 0; i < apiData.value.length; i += 1) {
+        const item = apiData.value[i];
+        if (item.name === params[0].seriesName) {
+          unit = item.unit;
+        }
+      }
       curInfo.vals = [];
       params.forEach(item => {
-        curInfo.vals.push(item.value);
+        curInfo.vals.push(`${unit}${item.value}`);
       });
       return;
     }
@@ -62,7 +69,7 @@ const getChartData = ({ startDay, endDay }) => {
           type: TYPE,
           data: item.value
         };
-        curInfo.vals.push(item.value[item.value.length - 1]);
+        curInfo.vals.push(`${item.unit}${item.value[item.value.length - 1]}`);
         lineOption.series.push(data);
       });
     }
