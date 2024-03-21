@@ -45,6 +45,9 @@ const lineOption = reactive({
   },
   xAxis: {
     type: "category",
+    axisTick: {
+      show: false
+    },
     data: []
   },
   yAxis: {
@@ -74,7 +77,9 @@ const getChartData = ({ startDay, endDay }) => {
         const data = {
           name: item.name,
           type: TYPE,
-          data: item.value
+          data: item.value,
+          smooth: true,
+          symbol: "none"
         };
         arr.push(...item.value);
         curInfo.vals.push(`${item.unit}${item.value[item.value.length - 1]}`);
@@ -102,13 +107,24 @@ const refLineOption = ref(lineOption);
 <template>
   <div>
     <div class="flex justify-between">
-      <div>资产走势<van-icon name="info-o" /></div>
+      <div class="text-[16px]">
+        资产走势<van-icon class="ml-[4px] text-zinc-500" name="info-o" />
+      </div>
     </div>
     <div>
-      <div>{{ curInfo.time }}</div>
-      <div>总资产</div>
-      <div class="flex justify-between">
-        <div class="flex-1" v-for="item in curInfo.vals" :key="item">
+      <div class="text-zinc-500">{{ curInfo.time }}</div>
+      <div class="text-zinc-500">总资产</div>
+      <div class="flex justify-between text-[16px]">
+        <div
+          class="flex-1"
+          v-for="item in curInfo.vals"
+          :key="item"
+          :class="
+            item.toString().indexOf('-') >= 0
+              ? 'text-red-500'
+              : 'text-green-500'
+          "
+        >
           {{ item }}
         </div>
       </div>

@@ -1,5 +1,5 @@
 <script setup>
-import { ref, reactive, watch } from "vue";
+import { ref, reactive, watch, computed } from "vue";
 import Chart from "@/components/Chart/index.vue";
 import { getCoinDistributionChartApi } from "@/api/coin";
 import { countDecimals } from "@/utils/common";
@@ -18,33 +18,44 @@ const props = defineProps({
   }
 });
 let apiData = ref([]);
+let numberInfo = reactive({
+  total: 0, // valuation 总值
+  decimal: 0, // 小数位数
+  unit: "" // 单位
+});
 const pieOption = reactive({
   tooltip: {
     trigger: "item",
     showContent: false
   },
   legend: {
-    left: "center",
-    bottom: 10,
+    textStyle: {
+      fontWeight: "bold", // 设置图例文本为粗体
+      fontSize: 12
+    },
     formatter: function (name) {
-      let tarValue;
+      let val;
       for (let i = 0; i < apiData.value.length; i += 1) {
         const cur = apiData.value[i];
         if (cur && cur.name === name) {
-          tarValue = cur.bal;
+          val = parseFloat(cur.valuation);
+          break;
         }
       }
-      return `${name}: ${tarValue}`;
+      const percentage = ((val / numberInfo.total) * 100).toFixed(2);
+      return `${name}: (${percentage}%)`;
     }
   },
   series: [
     {
       type: "pie",
-      minAngle: 5,
+      selectedMode: true,
+      selectedOffset: 0,
+      minAngle: 1,
       radius: ["50%", "60%"],
-      avoidLabelOverlap: false,
+      avoidLabelOverlap: true,
       itemStyle: {
-        borderRadius: 10,
+        borderRadius: 2,
         borderColor: "#fff",
         borderWidth: 2
       },
@@ -69,21 +80,40 @@ const pieOption = reactive({
         }
       },
       emphasis: {
-        scaleSize: 10,
+        scaleSize: 8,
         label: {
           show: true,
           formatter: function (params) {
             let str = "≈";
+            let bal = "";
             for (let i = 0; i < apiData.value.length; i += 1) {
               const cur = apiData.value[i];
               if (cur && cur.name === params.name) {
                 str = "≈" + cur.unit + cur.valuation;
+                bal = cur.bal;
               }
             }
-            return params.name + "\n" + params.value + "\n" + str;
+            return params.name + "\n" + bal + "\n" + str;
           }
         }
       },
+      // select: {
+      //   label: {
+      //     show: true,
+      //     formatter: function (params) {
+      //       let str = "≈";
+      //       let bal = "";
+      //       for (let i = 0; i < apiData.value.length; i += 1) {
+      //         const cur = apiData.value[i];
+      //         if (cur && cur.name === params.name) {
+      //           str = "≈" + cur.unit + cur.valuation;
+      //           bal = cur.bal;
+      //         }
+      //       }
+      //       return params.name + "\n" + bal + "\n" + str;
+      //     }
+      //   }
+      // },
       labelLine: {
         show: false
       },
@@ -92,6 +122,19 @@ const pieOption = reactive({
   ]
 });
 
+const setNumberInfo = data => {
+  let total = 0;
+  let decimal = 0;
+  let unit = "";
+  data.forEach(item => {
+    total += parseFloat(item.valuation);
+    decimal = Math.max(decimal, countDecimals(item.valuation));
+    unit = item.unit;
+  });
+  numberInfo.total = parseFloat(total.toFixed(decimal));
+  numberInfo.decimal = decimal;
+  numberInfo.unit = unit;
+};
 const getChartData = ({ startDay, endDay }) => {
   getCoinDistributionChartApi({
     startDay,
@@ -99,16 +142,30 @@ const getChartData = ({ startDay, endDay }) => {
   }).then(res => {
     const { code, data } = res;
     if (code === 0) {
+      const datas = data.data || [];
       apiData.value = [];
-      apiData.value.push(...data.data);
       pieOption.series[0].data = [];
-      data.data.forEach(item => {
+      const list = datas
+        .filter(item => parseFloat(item.valuation) >= 0.001) // 过滤掉 valuation 值小于 0.001 的元素
+        .sort((a, b) => parseFloat(b.valuation) - parseFloat(a.valuation)); // 按照 valuation 属性进行排序
+      setNumberInfo(list);
+      apiData.value.push(...list);
+      list.forEach(item => {
         const data = {
           name: item.name,
-          value: parseFloat(item.bal)
+          value: parseFloat(item.valuation)
         };
         pieOption.series[0].data.push(data);
       });
+      if (datas.length > 2) {
+        pieOption.legend.orient = "vertical";
+        pieOption.legend.right = "right";
+        pieOption.legend.top = "center";
+        pieOption.series[0].center = ["32%", "50%"];
+      } else {
+        pieOption.legend.orient = "horizontal";
+        pieOption.legend.top = "bottom";
+      }
     }
   });
 };
@@ -124,6 +181,20 @@ watch(
     immediate: true
   }
 );
+
+const chartHeight = computed(() => {
+  let baseHeight = 270;
+  let increment = 30;
+  let dataCount = apiData.value.length;
+
+  if (dataCount <= 10) {
+    return baseHeight + 'px';
+  } else {
+    let extraHeight = Math.floor(dataCount - 10) * increment;
+    return baseHeight + extraHeight + "px";
+  }
+});
+
 // 饼图
 // const data = [
 //   { value: 1048, name: "USTD" },
@@ -134,8 +205,10 @@ const refPieOption = ref(pieOption);
 <template>
   <div>
     <div class="flex justify-between">
-      <div>资产分布<van-icon name="info-o" /></div>
+      <div class="text-[16px]">
+        资产分布<van-icon class="ml-[4px] text-zinc-500" name="info-o" />
+      </div>
     </div>
-    <Chart :option="refPieOption" :style="{ height: '330px' }" />
+    <Chart :option="refPieOption" :style="{ height: chartHeight }" />
   </div>
 </template>

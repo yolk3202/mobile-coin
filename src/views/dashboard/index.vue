@@ -141,7 +141,10 @@ onMounted(() => {
           <van-row justify="space-around" :gutter="20">
             <van-col span="12">
               <div class="">
-                <div class="mb-[6px]">本月收益<van-icon name="info-o" /></div>
+                <div class="mb-[6px]">
+                  本月收益
+                  <van-icon class="ml-[4px] text-zinc-500" name="info-o" />
+                </div>
                 <div
                   :class="
                     realData.monthEarnings.toString().indexOf('-') >= 0
@@ -159,7 +162,7 @@ onMounted(() => {
               <div>
                 <div class="mb-[6px]">
                   历史收益
-                  <van-icon name="info-o" />
+                  <van-icon class="ml-[4px] text-zinc-500" name="info-o" />
                 </div>
                 <div
                   :class="
