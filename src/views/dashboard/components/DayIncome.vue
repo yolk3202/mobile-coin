@@ -4,6 +4,7 @@ import Chart from "@/components/Chart/index.vue";
 import { getCoinDayChartApi } from "@/api/coin";
 
 const TYPE = "bar";
+const emit = defineEmits(["showModal"]);
 const props = defineProps({
   filterDay: {
     type: Object,
@@ -103,7 +104,16 @@ const refBarOption = ref(lineOption);
   <div>
     <div class="flex justify-between">
       <div class="text-[16px]">
-        每日收益<van-icon class="ml-[4px] text-zinc-500" name="info-o" />
+        每日收益
+        <van-icon
+          @click="
+            () => {
+              emit('showModal');
+            }
+          "
+          class="ml-[4px] text-zinc-500"
+          name="info-o"
+        />
       </div>
     </div>
     <div>

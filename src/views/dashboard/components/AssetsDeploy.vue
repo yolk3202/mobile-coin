@@ -5,6 +5,7 @@ import { getCoinDistributionChartApi } from "@/api/coin";
 import { countDecimals } from "@/utils/common";
 
 // const TYPE = "pie";
+const emit = defineEmits(["showModal"]);
 const props = defineProps({
   filterDay: {
     type: Object,
@@ -206,7 +207,16 @@ const refPieOption = ref(pieOption);
   <div>
     <div class="flex justify-between">
       <div class="text-[16px]">
-        资产分布<van-icon class="ml-[4px] text-zinc-500" name="info-o" />
+        资产分布
+        <van-icon
+          @click="
+            () => {
+              emit('showModal');
+            }
+          "
+          class="ml-[4px] text-zinc-500"
+          name="info-o"
+        />
       </div>
     </div>
     <Chart :option="refPieOption" :style="{ height: chartHeight }" />
