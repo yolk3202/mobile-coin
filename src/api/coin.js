@@ -19,6 +19,17 @@ export const getCoinChartApi = ({ startDay, endDay }) => {
     }
   });
 };
+// 获取累计资产tips
+export const getCoinTipsApi = ({ startDay, endDay }) => {
+  return http.request({
+    url: "/api/asset_analysis/total_earnings_tips",
+    method: "post",
+    data: {
+      startDay,
+      endDay
+    }
+  });
+};
 
 // 获取每日资产图表
 export const getCoinDayChartApi = ({ startDay, endDay }) => {

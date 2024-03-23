@@ -293,10 +293,7 @@ onMounted(() => {
       <DayIncome :filter-day="timeInfo" @show-modal="showTheDayIncome" />
       <AssetsTrend :filter-day="timeInfo" @show-modal="showTheAssetsTrend" />
       <AssetsDeploy :filter-day="timeInfo" @show-modal="showTheAssetsDeploy" />
-      <TotalIncomePopup v-model="totalIncomeInfo.show" />
-      <!-- <Chart :option="refLineOption" :style="{ height: '330px' }" />
-      <Chart :option="refScoreOption" :style="{ height: '330px' }" />
-      <Chart :option="refPieOption" :style="{ height: '330px' }" /> -->
+      <TotalIncomePopup v-model="totalIncomeInfo.show" :filter-day="timeInfo" />
     </div>
   </div>
 </template>

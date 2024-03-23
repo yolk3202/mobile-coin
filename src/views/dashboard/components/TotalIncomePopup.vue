@@ -1,23 +1,19 @@
 <script setup>
-import { ref, watchEffect } from "vue";
+import { ref, watchEffect, watch, reactive } from "vue";
+import { getCoinTipsApi } from "@/api/coin";
 import { useDarkMode } from "@/hooks/useToggleDarkMode";
 
 const props = defineProps({
   modelValue: {
     type: Boolean
   },
-  dataInfo: {
+  filterDay: {
     type: Object,
+    required: true,
     default: () => {
       return {
-        startDate: "2024-02-20",
-        endDate: "2024-03-20",
-        startIncome: "0.00",
-        endIncome: "99.72",
-        clearIncome: "100.00",
-        totalIncome: "-0.27",
-        unit: "₮",
-        historyEarnings: 0
+        startDay: "",
+        endDay: ""
       };
     }
   }
@@ -26,7 +22,15 @@ const props = defineProps({
 const emit = defineEmits(["update:modelValue"]);
 
 const show = ref(props.modelValue);
-
+let dataInfo = reactive({
+  startDay: "",
+  endDay: "",
+  startIncome: "",
+  endIncome: "",
+  clearIncome: "",
+  totalIncome: "",
+  unit: ""
+});
 watchEffect(() => {
   show.value = props.modelValue;
 });
@@ -35,6 +39,29 @@ const closeHandler = () => {
   show.value = false;
   emit("update:modelValue", show.value);
 };
+const getChartData = async ({ startDay, endDay }) => {
+  getCoinTipsApi({ startDay, endDay }).then(res => {
+    const { code, data } = res;
+    if (code === 0) {
+      dataInfo = {
+        ...data
+      };
+    }
+  });
+};
+
+watch(
+  () => props.filterDay,
+  newVal => {
+    if (newVal.startDay && newVal.endDay) {
+      getChartData({ startDay: newVal.startDay, endDay: newVal.endDay });
+    }
+  },
+  {
+    deep: true,
+    immediate: true
+  }
+);
 </script>
 <template>
   <van-popup
@@ -51,18 +78,18 @@ const closeHandler = () => {
         class="px-[16px] py-[10px] text-[16px] font-bold border-b"
         :class="useDarkMode() ? 'border-neutral-700' : 'border-neutral-300'"
       >
-        累计收益(todo api)
+        累计收益
       </div>
       <div
         class="px-[16px] py-[10px] border-b"
         :class="useDarkMode() ? 'border-neutral-700' : 'border-neutral-300'"
       >
         <div class="flex justify-between text-[14px] leading-[30px]">
-          <div class="text-neutral-500">期末资产({{ dataInfo.endDate }})</div>
+          <div class="text-neutral-500">期末资产({{ dataInfo.endDay }})</div>
           <div>{{ dataInfo.unit }}{{ dataInfo.endIncome }}</div>
         </div>
         <div class="flex justify-between text-[14px] leading-[30px]">
-          <div class="text-neutral-500">期初资产({{ dataInfo.startDate }})</div>
+          <div class="text-neutral-500">期初资产({{ dataInfo.startDay }})</div>
           <div>{{ dataInfo.unit }}{{ dataInfo.startIncome }}</div>
         </div>
         <div class="flex justify-between text-[14px] leading-[30px]">
@@ -94,7 +121,6 @@ const closeHandler = () => {
           </div>
         </div>
       </div>
-
     </div>
   </van-popup>
 </template>

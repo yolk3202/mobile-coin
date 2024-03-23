@@ -17,15 +17,18 @@ const logout = () => {
     <div class="px-[16px] py-[30px]">
       <!-- <van-image round width="100" height="100" :src="userInfo.avatar" /> -->
       <div class="text-[16px] font-bold mb-[10px]">用户信息</div>
-      <div class="flex flex-wraps items-center">
-        <div class="flex-1 font-bold">
-          账号: <span class="font-normal">{{ userInfo.phoneName }}</span>
+      <div>
+        <div class="font-bold leading-[30px]">
+          账号:
+          <span class="font-normal ml-[8px]">{{ userInfo.phoneName }}</span>
         </div>
-        <div class="flex-1 font-bold">
-          邮箱: <span class="font-normal">{{ userInfo.email }}</span>
+        <div class="font-bold leading-[30px]">
+          邮箱:
+          <span class="font-normal ml-[8px]">{{ userInfo.email }}</span>
         </div>
-        <div class="flex-1 font-bold">
-          昵称: <span class="font-normal">{{ userInfo.nickName }}</span>
+        <div class="font-bold leading-[30px]">
+          昵称:
+          <span class="font-normal ml-[8px]">{{ userInfo.nickName }}</span>
         </div>
       </div>
     </div>
