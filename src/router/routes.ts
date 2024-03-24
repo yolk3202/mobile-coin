@@ -24,7 +24,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "Dashboard",
         component: Dashboard,
         meta: {
-          title: "首页"
+          title: "资产"
         }
       },
       {

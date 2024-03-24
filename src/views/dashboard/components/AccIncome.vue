@@ -72,8 +72,6 @@ const lineOption = reactive({
   },
   grid: {
     left: "3%",
-    right: "3%",
-    bottom: "3%",
     containLabel: true
   },
   series: []

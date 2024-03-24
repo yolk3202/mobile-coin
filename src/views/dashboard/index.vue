@@ -1,4 +1,5 @@
 <script setup lang="ts" name="Dashboard">
+import moment from "moment";
 import { reactive, ref, onMounted } from "vue";
 import { showDialog } from "vant";
 import "vant/es/dialog/style";
@@ -9,7 +10,7 @@ import DayIncome from "./components/DayIncome.vue";
 import AssetsDeploy from "./components/AssetsDeploy.vue";
 import AssetsTrend from "./components/AssetsTrend.vue";
 import TotalIncomePopup from "./components/TotalIncomePopup.vue";
-import moment from "moment";
+import { explainList } from "./model";
 
 const actions = [{ name: "总揽" }, { name: "总揽1" }, { name: "总揽2" }];
 const value1 = ref("总览");
@@ -186,6 +187,7 @@ onMounted(() => {
           <div class="mb-[10px]">
             今日收益
             <span
+              class="ml-[4px]"
               :class="
                 realData.todayEarnings.toString().indexOf('-') >= 0
                   ? 'text-red-500'
@@ -294,6 +296,15 @@ onMounted(() => {
       <AssetsTrend :filter-day="timeInfo" @show-modal="showTheAssetsTrend" />
       <AssetsDeploy :filter-day="timeInfo" @show-modal="showTheAssetsDeploy" />
       <TotalIncomePopup v-model="totalIncomeInfo.show" :filter-day="timeInfo" />
+    </div>
+    <div>
+      <div
+        v-for="item in explainList"
+        :key="item"
+        class="text-neutral-500 mb-[10px]"
+      >
+        {{ item }}
+      </div>
     </div>
   </div>
 </template>
