@@ -18,6 +18,7 @@ const props = defineProps({
     }
   }
 });
+let chartDom = ref(null);
 let apiData = ref([]);
 let numberInfo = reactive({
   total: 0, // valuation 总值
@@ -25,10 +26,6 @@ let numberInfo = reactive({
   unit: "" // 单位
 });
 const pieOption = reactive({
-  tooltip: {
-    trigger: "item",
-    showContent: false
-  },
   legend: {
     textStyle: {
       fontWeight: "bold", // 设置图例文本为粗体
@@ -50,10 +47,10 @@ const pieOption = reactive({
   series: [
     {
       type: "pie",
-      selectedMode: true,
+      selectedMode: "selectedMode",
       selectedOffset: 0,
       minAngle: 1,
-      radius: ["50%", "60%"],
+      radius: ["50%", "65%"],
       avoidLabelOverlap: true,
       itemStyle: {
         borderRadius: 2,
@@ -61,7 +58,7 @@ const pieOption = reactive({
         borderWidth: 2
       },
       label: {
-        show: false,
+        show: true,
         position: "center",
         fontSize: 16,
         fontWeight: "bold",
@@ -98,23 +95,6 @@ const pieOption = reactive({
           }
         }
       },
-      // select: {
-      //   label: {
-      //     show: true,
-      //     formatter: function (params) {
-      //       let str = "≈";
-      //       let bal = "";
-      //       for (let i = 0; i < apiData.value.length; i += 1) {
-      //         const cur = apiData.value[i];
-      //         if (cur && cur.name === params.name) {
-      //           str = "≈" + cur.unit + cur.valuation;
-      //           bal = cur.bal;
-      //         }
-      //       }
-      //       return params.name + "\n" + bal + "\n" + str;
-      //     }
-      //   }
-      // },
       labelLine: {
         show: false
       },
@@ -122,7 +102,14 @@ const pieOption = reactive({
     }
   ]
 });
-
+const clickCallback = ({ eventType }) => {
+  if (eventType === "mouseover") {
+    pieOption.series[0].label.show = false;
+  }
+  if (eventType === "mouseout") {
+    pieOption.series[0].label.show = true;
+  }
+};
 const setNumberInfo = data => {
   let total = 0;
   let decimal = 0;
@@ -219,6 +206,11 @@ const refPieOption = ref(pieOption);
         />
       </div>
     </div>
-    <Chart :option="refPieOption" :style="{ height: chartHeight }" />
+    <Chart
+      ref="chartDom"
+      :option="refPieOption"
+      @click-callback="clickCallback"
+      :style="{ height: chartHeight }"
+    />
   </div>
 </template>
