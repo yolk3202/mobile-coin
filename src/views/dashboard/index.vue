@@ -61,12 +61,14 @@ const timeList = reactive([
 ]);
 const twoYearsAgo = new Date();
 twoYearsAgo.setFullYear(twoYearsAgo.getFullYear() - 2);
+const oneDayAgo = new Date();
+oneDayAgo.setDate(oneDayAgo.getDate() - 1);
 
 const calendarInfo = reactive({
   show: false,
   submitFlag: false,
   minDate: twoYearsAgo,
-  maxDate: new Date()
+  maxDate: oneDayAgo
 });
 const curTime = ref(7);
 const timeInfo = reactive({
@@ -83,7 +85,7 @@ const chooseTime = item => {
     calendarInfo.show = true;
   } else {
     timeInfo.startDay = moment().subtract(value, "days").format(formatter);
-    timeInfo.endDay = moment().format(formatter);
+    timeInfo.endDay = moment().subtract(1, "days").format(formatter);
   }
 };
 const onConfirmCustomTime = date => {
@@ -154,7 +156,7 @@ onMounted(() => {
   getRealSrcData();
   // 初始化数据
   timeInfo.startDay = moment().subtract(7, "days").format(formatter);
-  timeInfo.endDay = moment().format(formatter);
+  timeInfo.endDay = moment().subtract(1, "days").format(formatter);
 });
 </script>
 
