@@ -51,6 +51,11 @@ const lineOption = reactive({
     }
   },
   yAxis: {},
+  grid: {
+    left: "2%",
+    right: "5%",
+    containLabel: true
+  },
   series: []
 });
 
