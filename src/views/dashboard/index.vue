@@ -187,7 +187,7 @@ onMounted(() => {
             <span class="text-[14px]">USDT</span>
           </div>
           <div class="mb-[10px]">
-            今日收益
+            昨日收益
             <span
               class="ml-[4px]"
               :class="
@@ -303,7 +303,7 @@ onMounted(() => {
       <div
         v-for="item in explainList"
         :key="item"
-        class="text-neutral-500 mb-[10px]"
+        class="text-neutral-500 mb-[10px] text-[13px]"
       >
         {{ item }}
       </div>

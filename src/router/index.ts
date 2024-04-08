@@ -25,6 +25,9 @@ export interface toRouteType extends RouteLocationNormalized {
 
 router.beforeEach(async (to: toRouteType, from, next) => {
   NProgress.start();
+  next();
+  NProgress.done();
+  return;
   // 路由缓存
   useCachedViewStoreHook().addCachedView(to);
   // 页面 title
