@@ -5,6 +5,7 @@ import Chart from "@/components/Chart/index.vue";
 import { getCoinChartApi } from "@/api/coin";
 
 const TYPE = "line";
+const emit = defineEmits(["showModal"]);
 const props = defineProps({
   filterDay: {
     type: Object,
@@ -61,7 +62,7 @@ const lineOption = reactive({
     data: [],
     triggerEvent: true,
     axisTick: {
-      alignWithLabel: true
+      show: false
     }
   },
   yAxis: {
@@ -70,9 +71,8 @@ const lineOption = reactive({
     max: "auto"
   },
   grid: {
-    left: "3%",
-    right: "3%",
-    bottom: "3%",
+    left: "2%",
+    right: "5%",
     containLabel: true
   },
   series: []
@@ -88,7 +88,9 @@ const setChartsData = checkedVal => {
       const data = {
         name: item.name,
         type: TYPE,
-        data: item.value
+        data: item.value,
+        smooth: true,
+        symbol: "none"
       };
       arr.push(...item.value);
       if (item.unit === "%") {
@@ -165,7 +167,18 @@ const refLineOption = ref(lineOption);
 <template>
   <div>
     <div class="flex justify-between">
-      <div>累计收益<van-icon name="info-o" /></div>
+      <div class="text-[16px]">
+        累计收益
+        <van-icon
+          @click="
+            () => {
+              emit('showModal');
+            }
+          "
+          class="ml-[4px] text-zinc-500"
+          name="info-o"
+        />
+      </div>
       <van-switch
         v-model="checked"
         :active-value="'value'"
@@ -176,15 +189,24 @@ const refLineOption = ref(lineOption);
             class="leading-8 text-center h-full"
             :class="useDarkMode() ? 'text-slate-400' : 'text-slate-800'"
           >
-            {{ checked === "value" ? "$" : "%" }}
+            {{ checked === "value" ? "₮" : "%" }}
           </div>
         </template>
       </van-switch>
     </div>
     <div>
-      <div>{{ curInfo.time }}</div>
-      <div class="flex justify-between">
-        <div class="flex-1" v-for="item in curInfo.vals" :key="item">
+      <div class="text-zinc-500">{{ curInfo.time }}</div>
+      <div class="flex justify-between text-[16px]">
+        <div
+          class="flex-1"
+          v-for="item in curInfo.vals"
+          :key="item"
+          :class="
+            item.toString().indexOf('-') >= 0
+              ? 'text-red-500'
+              : 'text-green-500'
+          "
+        >
           {{ item }}
         </div>
       </div>

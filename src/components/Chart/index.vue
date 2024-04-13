@@ -1,12 +1,18 @@
 <script setup lang="ts">
-import { useDarkMode } from "@/hooks/useToggleDarkMode";
+import { storeToRefs } from "pinia";
 import { ref, watch, onMounted, onUnmounted } from "vue";
 import type { ECharts } from "echarts";
 import * as echarts from "echarts";
 import { debounce } from "lodash-es";
+import { useDarkModeStore } from "@/store/modules/darkMode";
 import { addListener, removeListener } from "resize-detector";
 import dark from "./dark";
 import light from "./light";
+
+const darkModeStore = useDarkModeStore();
+const { darkMode } = storeToRefs(darkModeStore);
+
+const emit = defineEmits(["clickCallback"]);
 
 const props = defineProps({
   option: Object
@@ -16,7 +22,6 @@ echarts.registerTheme("dark-chart", dark);
 
 const chartDom = ref<HTMLDivElement>();
 let chart: ECharts | null = null;
-const isRealDark = ref(useDarkMode());
 function resizeChart() {
   chart?.resize();
 }
@@ -35,19 +40,25 @@ function initChart() {
     // init echarts
     chart = echarts.init(
       chartDom.value,
-      isRealDark.value ? "dark-chart" : "light-chart"
+      darkMode.value ? "dark-chart" : "light-chart"
     );
     chart.setOption(props.option);
-    // chart.on("click", function (params) {
-    //   // 控制台打印数据的名称
-    //   console.log("点击", params, params.name);
-    // });
+    chart.on("click", params => {
+      emit("clickCallback", { eventType: "click", params });
+    });
+    chart.on("mouseover", params => {
+      emit("clickCallback", { eventType: "mouseover", params });
+    });
+
+    chart.on("mouseout", params => {
+      emit("clickCallback", { eventType: "mouseout", params });
+    });
     addListener(chartDom.value, resize);
   }
 }
 
 watch(
-  isRealDark,
+  darkMode,
   () => {
     initChart();
   },

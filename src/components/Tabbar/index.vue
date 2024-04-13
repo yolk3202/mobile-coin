@@ -18,7 +18,7 @@ const active = ref(0);
 const tabbarData = reactive([
   {
     icon: "wap-home-o",
-    title: "首页",
+    title: "资产",
     to: {
       name: "Dashboard"
     }

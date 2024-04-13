@@ -20,7 +20,6 @@ const gotoLoginPage = () => {
 const onSubmitU = () => {
   changePasswordApi(passwordInfo)
     .then(res => {
-      console.log("res=>:", res);
       const { code } = res;
       if (code === 0) {
         showNotify({ type: "success", message: "修改成功,请重新登录" });

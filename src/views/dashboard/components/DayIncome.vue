@@ -4,6 +4,7 @@ import Chart from "@/components/Chart/index.vue";
 import { getCoinDayChartApi } from "@/api/coin";
 
 const TYPE = "bar";
+const emit = defineEmits(["showModal"]);
 const props = defineProps({
   filterDay: {
     type: Object,
@@ -44,9 +45,17 @@ const lineOption = reactive({
     }
   },
   xAxis: {
-    data: []
+    data: [],
+    axisTick: {
+      show: false
+    }
   },
   yAxis: {},
+  grid: {
+    left: "2%",
+    right: "5%",
+    containLabel: true
+  },
   series: []
 });
 
@@ -67,7 +76,12 @@ const getChartData = ({ startDay, endDay }) => {
         const data = {
           name: item.name,
           type: TYPE,
-          data: item.value
+          data: item.value,
+          itemStyle: {
+            color: function (params) {
+              return params.data >= 0 ? "#22c55e" : "#ef4444";
+            }
+          }
         };
         curInfo.vals.push(`${item.unit}${item.value[item.value.length - 1]}`);
         lineOption.series.push(data);
@@ -94,13 +108,33 @@ const refBarOption = ref(lineOption);
 <template>
   <div>
     <div class="flex justify-between">
-      <div>每日收益<van-icon name="info-o" /></div>
+      <div class="text-[16px]">
+        每日收益
+        <van-icon
+          @click="
+            () => {
+              emit('showModal');
+            }
+          "
+          class="ml-[4px] text-zinc-500"
+          name="info-o"
+        />
+      </div>
     </div>
     <div>
-      <div>{{ curInfo.time }}</div>
-      <div>当日收益</div>
-      <div class="flex justify-between">
-        <div class="flex-1" v-for="item in curInfo.vals" :key="item">
+      <div class="text-zinc-500">{{ curInfo.time }}</div>
+      <div class="text-zinc-500">当日收益</div>
+      <div class="flex justify-between text-[16px]">
+        <div
+          class="flex-1"
+          v-for="item in curInfo.vals"
+          :key="item"
+          :class="
+            item.toString().indexOf('-') >= 0
+              ? 'text-red-500'
+              : 'text-green-500'
+          "
+        >
           {{ item }}
         </div>
       </div>

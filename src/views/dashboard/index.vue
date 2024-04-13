@@ -1,12 +1,16 @@
 <script setup lang="ts" name="Dashboard">
+import moment from "moment";
 import { reactive, ref, onMounted } from "vue";
+import { showDialog } from "vant";
+import "vant/es/dialog/style";
 import { getCoinApi } from "@/api/coin";
 import { useDarkMode } from "@/hooks/useToggleDarkMode";
 import AccIncome from "./components/AccIncome.vue";
 import DayIncome from "./components/DayIncome.vue";
 import AssetsDeploy from "./components/AssetsDeploy.vue";
 import AssetsTrend from "./components/AssetsTrend.vue";
-import moment from "moment";
+import TotalIncomePopup from "./components/TotalIncomePopup.vue";
+import { explainList } from "./model";
 
 const actions = [{ name: "总揽" }, { name: "总揽1" }, { name: "总揽2" }];
 const value1 = ref("总览");
@@ -57,12 +61,14 @@ const timeList = reactive([
 ]);
 const twoYearsAgo = new Date();
 twoYearsAgo.setFullYear(twoYearsAgo.getFullYear() - 2);
+const oneDayAgo = new Date();
+oneDayAgo.setDate(oneDayAgo.getDate() - 1);
 
 const calendarInfo = reactive({
   show: false,
   submitFlag: false,
   minDate: twoYearsAgo,
-  maxDate: new Date()
+  maxDate: oneDayAgo
 });
 const curTime = ref(7);
 const timeInfo = reactive({
@@ -79,7 +85,7 @@ const chooseTime = item => {
     calendarInfo.show = true;
   } else {
     timeInfo.startDay = moment().subtract(value, "days").format(formatter);
-    timeInfo.endDay = moment().format(formatter);
+    timeInfo.endDay = moment().subtract(1, "days").format(formatter);
   }
 };
 const onConfirmCustomTime = date => {
@@ -88,13 +94,69 @@ const onConfirmCustomTime = date => {
   calendarInfo.show = false;
   calendarInfo.submitFlag = true;
 };
+// 本月收益
+const showTheMonthIncome = () => {
+  showDialog({
+    title: "本月收益",
+    message:
+      "本月第一个自然日00:00至今日 00:00(UTC+8)的累计收益，不包括今日收益"
+  }).then(() => {
+    // on close
+  });
+};
+// 历史收益
+const showTheHistoryIncome = () => {
+  showDialog({
+    title: "历史收益",
+    message: "自账户创建至今日 00:00(UTC+8)的累计收益，不包括今日收益"
+  }).then(() => {
+    // on close
+  });
+};
+let totalIncomeInfo = reactive({
+  show: false
+});
+// 总收益
+const showTheTotalIncome = () => {
+  totalIncomeInfo.show = true;
+};
+
+// 每日收益
+const showTheDayIncome = () => {
+  showDialog({
+    title: "每日收益",
+    message: "每日收益 = 当日结束时资产-当日初始资产-当日净划入资产"
+  }).then(() => {
+    // on close
+  });
+};
+
+// 资产走势
+const showTheAssetsTrend = () => {
+  showDialog({
+    title: "资产走势",
+    message: "资产总值= 币种权益x最新价"
+  }).then(() => {
+    // on close
+  });
+};
+
+// 资产分布
+const showTheAssetsDeploy = () => {
+  showDialog({
+    title: "资产分布",
+    message: "账户中各类资产的数量和占比，及其折合本地货币的价值"
+  }).then(() => {
+    // on close
+  });
+};
 
 onMounted(() => {
   // 请求实时数据
   getRealSrcData();
   // 初始化数据
   timeInfo.startDay = moment().subtract(7, "days").format(formatter);
-  timeInfo.endDay = moment().format(formatter);
+  timeInfo.endDay = moment().subtract(1, "days").format(formatter);
 });
 </script>
 
@@ -125,8 +187,9 @@ onMounted(() => {
             <span class="text-[14px]">USDT</span>
           </div>
           <div class="mb-[10px]">
-            今日收益
+            昨日收益
             <span
+              class="ml-[4px]"
               :class="
                 realData.todayEarnings.toString().indexOf('-') >= 0
                   ? 'text-red-500'
@@ -141,7 +204,14 @@ onMounted(() => {
           <van-row justify="space-around" :gutter="20">
             <van-col span="12">
               <div class="">
-                <div class="mb-[6px]">本月收益<van-icon name="info-o" /></div>
+                <div class="mb-[6px]">
+                  本月收益
+                  <van-icon
+                    @click="showTheMonthIncome"
+                    class="ml-[4px] text-zinc-500"
+                    name="info-o"
+                  />
+                </div>
                 <div
                   :class="
                     realData.monthEarnings.toString().indexOf('-') >= 0
@@ -159,7 +229,11 @@ onMounted(() => {
               <div>
                 <div class="mb-[6px]">
                   历史收益
-                  <van-icon name="info-o" />
+                  <van-icon
+                    @click="showTheHistoryIncome"
+                    class="ml-[4px] text-zinc-500"
+                    name="info-o"
+                  />
                 </div>
                 <div
                   :class="
@@ -219,13 +293,20 @@ onMounted(() => {
         :max-date="calendarInfo.maxDate"
         @confirm="onConfirmCustomTime"
       />
-      <AccIncome :filter-day="timeInfo" />
-      <DayIncome :filter-day="timeInfo" />
-      <AssetsTrend :filter-day="timeInfo" />
-      <AssetsDeploy :filter-day="timeInfo" />
-      <!-- <Chart :option="refLineOption" :style="{ height: '330px' }" />
-      <Chart :option="refScoreOption" :style="{ height: '330px' }" />
-      <Chart :option="refPieOption" :style="{ height: '330px' }" /> -->
+      <AccIncome :filter-day="timeInfo" @show-modal="showTheTotalIncome" />
+      <DayIncome :filter-day="timeInfo" @show-modal="showTheDayIncome" />
+      <AssetsTrend :filter-day="timeInfo" @show-modal="showTheAssetsTrend" />
+      <AssetsDeploy :filter-day="timeInfo" @show-modal="showTheAssetsDeploy" />
+      <TotalIncomePopup v-model="totalIncomeInfo.show" :filter-day="timeInfo" />
+    </div>
+    <div>
+      <div
+        v-for="item in explainList"
+        :key="item"
+        class="text-neutral-500 mb-[10px] text-[13px]"
+      >
+        {{ item }}
+      </div>
     </div>
   </div>
 </template>
