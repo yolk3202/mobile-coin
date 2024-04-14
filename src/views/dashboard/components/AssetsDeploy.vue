@@ -58,7 +58,7 @@ const pieOption = reactive({
         borderWidth: 2
       },
       label: {
-        show: true,
+        show: false,
         position: "center",
         fontSize: 16,
         fontWeight: "bold",
@@ -80,7 +80,7 @@ const pieOption = reactive({
       emphasis: {
         scaleSize: 8,
         label: {
-          show: true,
+          show: false,
           formatter: function (params) {
             let str = "≈";
             let bal = "";
@@ -103,12 +103,12 @@ const pieOption = reactive({
   ]
 });
 const clickCallback = ({ eventType }) => {
-  if (eventType === "mouseover") {
-    pieOption.series[0].label.show = false;
-  }
-  if (eventType === "mouseout") {
-    pieOption.series[0].label.show = true;
-  }
+  // if (eventType === "mouseover") {
+  //   pieOption.series[0].label.show = false;
+  // }
+  // if (eventType === "mouseout") {
+  //   pieOption.series[0].label.show = true;
+  // }
 };
 const setNumberInfo = data => {
   let total = 0;
