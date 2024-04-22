@@ -1,11 +1,15 @@
 <script setup>
 import { ref, reactive, watch } from "vue";
+import { showDialog } from "vant";
 import Chart from "@/components/Chart/index.vue";
 import { getCoinDayChartApi } from "@/api/coin";
 
 const TYPE = "bar";
-const emit = defineEmits(["showModal"]);
 const props = defineProps({
+  unitInfo: {
+    type: Object,
+    required: true
+  },
   filterDay: {
     type: Object,
     required: true,
@@ -16,6 +20,13 @@ const props = defineProps({
       };
     }
   }
+});
+const componentData = reactive({
+  loading: true,
+  srcData: {},
+  flag: false,
+  rate: 1,
+  unit: ""
 });
 let apiData = ref([]);
 // 初始化时间是 最近一天数据
@@ -30,16 +41,9 @@ const lineOption = reactive({
     axisPointer: { type: "line" },
     formatter: function (params) {
       curInfo.time = params[0].name;
-      let unit = "";
-      for (let i = 0; i < apiData.value.length; i += 1) {
-        const item = apiData.value[i];
-        if (item.name === params[0].seriesName) {
-          unit = item.unit;
-        }
-      }
       curInfo.vals = [];
       params.forEach(item => {
-        curInfo.vals.push(`${unit}${item.value}`);
+        curInfo.vals.push(`${componentData.unit}${item.value}`);
       });
       return;
     }
@@ -58,7 +62,26 @@ const lineOption = reactive({
   },
   series: []
 });
-
+const setChartsData = () => {
+  const { rate, unit } = componentData;
+  lineOption.series = [];
+  curInfo.vals = [];
+  apiData.value.forEach(item => {
+    let dataValues = item.value.map(val=>(val * rate).toFixed(2));
+    const data = {
+      name: item.name,
+      type: TYPE,
+      data: dataValues,
+      itemStyle: {
+        color: function (params) {
+          return params.data >= 0 ? "#22c55e" : "#ef4444";
+        }
+      }
+    };
+    curInfo.vals.push(`${unit}${dataValues[dataValues.length - 1]}`);
+    lineOption.series.push(data);
+  });
+}
 const getChartData = ({ startDay, endDay }) => {
   getCoinDayChartApi({
     startDay,
@@ -70,25 +93,25 @@ const getChartData = ({ startDay, endDay }) => {
       apiData.value.push(...data.data);
       curInfo.time = data.xdata[data.xdata.length - 1];
       lineOption.xAxis.data = data.xdata;
-      lineOption.series = [];
-      curInfo.vals = [];
-      data.data.forEach(item => {
-        const data = {
-          name: item.name,
-          type: TYPE,
-          data: item.value,
-          itemStyle: {
-            color: function (params) {
-              return params.data >= 0 ? "#22c55e" : "#ef4444";
-            }
-          }
-        };
-        curInfo.vals.push(`${item.unit}${item.value[item.value.length - 1]}`);
-        lineOption.series.push(data);
-      });
+      setChartsData()
+      componentData.flag = true;
     }
   });
 };
+watch(
+  () => props.unitInfo,
+  newVal => {
+    componentData.rate = newVal.rate;
+    componentData.unit = newVal.unit;
+    if (componentData.flag) {
+      setChartsData();
+    }
+  },
+  {
+    deep: true,
+    immediate: true
+  }
+);
 
 watch(
   () => props.filterDay,
@@ -103,6 +126,17 @@ watch(
   }
 );
 
+
+// 每日收益
+const showTheDayIncome = () => {
+  showDialog({
+    title: "每日收益",
+    message: "每日收益 = 当日结束时资产-当日初始资产-当日净划入资产"
+  }).then(() => {
+    // on close
+  });
+};
+
 const refBarOption = ref(lineOption);
 </script>
 <template>
@@ -111,11 +145,7 @@ const refBarOption = ref(lineOption);
       <div class="text-[16px]">
         每日收益
         <van-icon
-          @click="
-            () => {
-              emit('showModal');
-            }
-          "
+          @click="showTheDayIncome"
           class="ml-[4px] text-zinc-500"
           name="info-o"
         />

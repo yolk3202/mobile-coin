@@ -1,5 +1,13 @@
 import { http } from "@/utils/http";
 
+// 获取单位列表
+export const getUnitListApi = () => {
+  return http.request({
+    url: "/api/asset_analysis/unit_list",
+    method: "get"
+  });
+};
+
 // 获取实时资产
 export const getCoinApi = () => {
   return http.request({

@@ -7,6 +7,10 @@ const props = defineProps({
   modelValue: {
     type: Boolean
   },
+  unitInfo: {
+    type: Object,
+    required: true
+  },
   filterDay: {
     type: Object,
     required: true,
@@ -18,7 +22,12 @@ const props = defineProps({
     }
   }
 });
-
+const componentData = reactive({
+  flag: false,
+  rate: 1,
+  srcData: {},
+  unit: ""
+});
 const emit = defineEmits(["update:modelValue"]);
 
 const show = ref(props.modelValue);
@@ -39,6 +48,17 @@ const closeHandler = () => {
   show.value = false;
   emit("update:modelValue", show.value);
 };
+
+const changeData = () => {
+  const { rate } = componentData;
+  const { startIncome, endIncome, clearIncome, totalIncome } =
+    componentData.srcData;
+  // 保留两位小数
+  dataInfo.startIncome = (startIncome * rate).toFixed(2);
+  dataInfo.endIncome = (endIncome * rate).toFixed(2);
+  dataInfo.clearIncome = (clearIncome * rate).toFixed(2);
+  dataInfo.totalIncome = (totalIncome * rate).toFixed(2);
+};
 const getChartData = async ({ startDay, endDay }) => {
   getCoinTipsApi({ startDay, endDay }).then(res => {
     const { code, data } = res;
@@ -46,9 +66,27 @@ const getChartData = async ({ startDay, endDay }) => {
       dataInfo = {
         ...data
       };
+      componentData.srcData = res.data;
+      changeData();
+      componentData.flag = true;
     }
   });
 };
+
+watch(
+  () => props.unitInfo,
+  newVal => {
+    componentData.rate = newVal.rate;
+    componentData.unit = newVal.unit;
+    if(componentData.flag) {
+      changeData();
+    }
+  },
+  {
+    deep: true,
+    immediate: true
+  }
+);
 
 watch(
   () => props.filterDay,
@@ -86,15 +124,15 @@ watch(
       >
         <div class="flex justify-between text-[14px] leading-[30px]">
           <div class="text-neutral-500">期末资产({{ dataInfo.endDay }})</div>
-          <div>{{ dataInfo.unit }}{{ dataInfo.endIncome }}</div>
+          <div>{{ componentData.unit }}{{ dataInfo.endIncome }}</div>
         </div>
         <div class="flex justify-between text-[14px] leading-[30px]">
           <div class="text-neutral-500">期初资产({{ dataInfo.startDay }})</div>
-          <div>{{ dataInfo.unit }}{{ dataInfo.startIncome }}</div>
+          <div>{{ componentData.unit }}{{ dataInfo.startIncome }}</div>
         </div>
         <div class="flex justify-between text-[14px] leading-[30px]">
           <div class="text-neutral-500">净划入资产</div>
-          <div>{{ dataInfo.unit }}{{ dataInfo.clearIncome }}</div>
+          <div>{{ componentData.unit }}{{ dataInfo.clearIncome }}</div>
         </div>
       </div>
       <div class="px-[16px] py-[10px]">
@@ -107,7 +145,7 @@ watch(
                 : 'text-green-500'
             "
           >
-            {{ dataInfo.unit }}{{ dataInfo.totalIncome }}
+            {{ componentData.unit }}{{ dataInfo.totalIncome }}
           </div>
         </div>
         <div class="flex justify-between text-[12px] leading-[30px]">

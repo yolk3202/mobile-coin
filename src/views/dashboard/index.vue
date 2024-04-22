@@ -1,10 +1,10 @@
 <script setup lang="ts" name="Dashboard">
 import moment from "moment";
 import { reactive, ref, onMounted } from "vue";
-import { showDialog } from "vant";
 import "vant/es/dialog/style";
-import { getCoinApi } from "@/api/coin";
+import { getUnitListApi, getCoinApi } from "@/api/coin";
 import { useDarkMode } from "@/hooks/useToggleDarkMode";
+import OverallPanel from "./components/OverallPanel.vue";
 import AccIncome from "./components/AccIncome.vue";
 import DayIncome from "./components/DayIncome.vue";
 import AssetsDeploy from "./components/AssetsDeploy.vue";
@@ -12,43 +12,28 @@ import AssetsTrend from "./components/AssetsTrend.vue";
 import TotalIncomePopup from "./components/TotalIncomePopup.vue";
 import { explainList } from "./model";
 
-const actions = [{ name: "总揽" }, { name: "总揽1" }, { name: "总揽2" }];
-const value1 = ref("总览");
-const show = ref(false);
-const onSelect = item => {
-  // 默认情况下点击选项时不会自动收起
-  // 可以通过 close-on-click-action 属性开启自动收起
-  show.value = false;
-  value1.value = item.name;
-};
-let realData = reactive({
-  historyEarnings: 0,
-  historyRatio: 0,
-  monthEarnings: 0,
-  monthRatio: 0,
-  todayEarnings: 0,
-  todayRatio: 0,
-  totalAssetValuation: 0,
-  unit: ""
+let unitInfo = reactive({
+  defaultUnit: {},
+  unit:" ",
+  unitList: []
 });
-const realLoading = ref(false);
-
-const getRealSrcData = () => {
-  // 请求实时数据
-  realLoading.value = true;
-  getCoinApi()
+const getUnitListList = () =>{
+  getUnitListApi()
     .then(res => {
       const { code } = res;
       if (code === 0) {
-        realData = {
-          ...res.data
-        };
+        const { data } = res;
+        const { defaultUnit, unitList } = data;
+        unitInfo.defaultUnit = defaultUnit;
+        unitInfo.unitList = unitList;
+        unitInfo.unit = defaultUnit.unit;
       }
     })
-    .catch(() => {})
-    .finally(() => {
-      realLoading.value = false;
-    });
+    .catch(() => {});
+}
+const onChangeUnitInfo = item => {
+  unitInfo.defaultUnit = item;
+  unitInfo.unit = item.unit;
 };
 
 const formatter = "YYYY-MM-DD";
@@ -94,25 +79,8 @@ const onConfirmCustomTime = date => {
   calendarInfo.show = false;
   calendarInfo.submitFlag = true;
 };
-// 本月收益
-const showTheMonthIncome = () => {
-  showDialog({
-    title: "本月收益",
-    message:
-      "本月第一个自然日00:00至今日 00:00(UTC+8)的累计收益，不包括今日收益"
-  }).then(() => {
-    // on close
-  });
-};
-// 历史收益
-const showTheHistoryIncome = () => {
-  showDialog({
-    title: "历史收益",
-    message: "自账户创建至今日 00:00(UTC+8)的累计收益，不包括今日收益"
-  }).then(() => {
-    // on close
-  });
-};
+
+//
 let totalIncomeInfo = reactive({
   show: false
 });
@@ -121,39 +89,11 @@ const showTheTotalIncome = () => {
   totalIncomeInfo.show = true;
 };
 
-// 每日收益
-const showTheDayIncome = () => {
-  showDialog({
-    title: "每日收益",
-    message: "每日收益 = 当日结束时资产-当日初始资产-当日净划入资产"
-  }).then(() => {
-    // on close
-  });
-};
 
-// 资产走势
-const showTheAssetsTrend = () => {
-  showDialog({
-    title: "资产走势",
-    message: "资产总值= 币种权益x最新价"
-  }).then(() => {
-    // on close
-  });
-};
-
-// 资产分布
-const showTheAssetsDeploy = () => {
-  showDialog({
-    title: "资产分布",
-    message: "账户中各类资产的数量和占比，及其折合本地货币的价值"
-  }).then(() => {
-    // on close
-  });
-};
 
 onMounted(() => {
-  // 请求实时数据
-  getRealSrcData();
+  // 请求币种列表
+  getUnitListList();
   // 初始化数据
   timeInfo.startDay = moment().subtract(7, "days").format(formatter);
   timeInfo.endDay = moment().subtract(1, "days").format(formatter);
@@ -162,96 +102,11 @@ onMounted(() => {
 
 <template>
   <div class="demo-content px-[12px]">
-    <!-- 面板区域 -->
-    <!-- @click="show = true" -->
-    <div class="mb-[16px]">
-      <div class="flex items-center justify-between">
-        <div class="text-1xl font-bold mb-[10px] mt-[10px] pl-[8px]">
-          {{ value1 }}
-        </div>
-        <!-- <van-icon class="pl-[4px]" name="arrow-down" /> -->
-      </div>
-      <van-action-sheet
-        v-model:show="show"
-        :actions="actions"
-        @select="onSelect"
-      />
-      <div class="border border-gray-300 rounded-md h-[180px] box-border">
-        <div v-if="realLoading" class="h-full flex items-center justify-center">
-          <van-loading type="spinner" />
-        </div>
-        <div v-else class="text-[14px] p-4">
-          <div class="mb-[8px]">总资产估值</div>
-          <div class="text-[20px] mb-[8px]">
-            {{ realData.totalAssetValuation }}
-            <span class="text-[14px]">USDT</span>
-          </div>
-          <div class="mb-[10px]">
-            昨日收益
-            <span
-              class="ml-[4px]"
-              :class="
-                realData.todayEarnings.toString().indexOf('-') >= 0
-                  ? 'text-red-500'
-                  : 'text-green-500'
-              "
-            >
-              {{ realData.unit }}
-              {{ realData.todayEarnings }}
-              ({{ realData.todayRatio }})
-            </span>
-          </div>
-          <van-row justify="space-around" :gutter="20">
-            <van-col span="12">
-              <div class="">
-                <div class="mb-[6px]">
-                  本月收益
-                  <van-icon
-                    @click="showTheMonthIncome"
-                    class="ml-[4px] text-zinc-500"
-                    name="info-o"
-                  />
-                </div>
-                <div
-                  :class="
-                    realData.monthEarnings.toString().indexOf('-') >= 0
-                      ? 'text-red-500'
-                      : 'text-green-500'
-                  "
-                >
-                  {{ realData.unit }}
-                  {{ realData.monthEarnings }}
-                  ({{ realData.monthRatio }})
-                </div>
-              </div>
-            </van-col>
-            <van-col span="12">
-              <div>
-                <div class="mb-[6px]">
-                  历史收益
-                  <van-icon
-                    @click="showTheHistoryIncome"
-                    class="ml-[4px] text-zinc-500"
-                    name="info-o"
-                  />
-                </div>
-                <div
-                  :class="
-                    realData.historyEarnings.toString().indexOf('-') >= 0
-                      ? 'text-red-500'
-                      : 'text-green-500'
-                  "
-                >
-                  {{ realData.unit }}
-                  {{ realData.historyEarnings }}
-                  ({{ realData.historyRatio }})
-                </div>
-              </div>
-            </van-col>
-          </van-row>
-        </div>
-      </div>
-    </div>
+    <OverallPanel
+      :unit-info="unitInfo.defaultUnit"
+      :unit-list="unitInfo.unitList"
+      @change-unit="onChangeUnitInfo"
+    />
     <div>
       <van-sticky :offset-top="53">
         <div
@@ -293,11 +148,19 @@ onMounted(() => {
         :max-date="calendarInfo.maxDate"
         @confirm="onConfirmCustomTime"
       />
-      <AccIncome :filter-day="timeInfo" @show-modal="showTheTotalIncome" />
-      <DayIncome :filter-day="timeInfo" @show-modal="showTheDayIncome" />
-      <AssetsTrend :filter-day="timeInfo" @show-modal="showTheAssetsTrend" />
-      <AssetsDeploy :filter-day="timeInfo" @show-modal="showTheAssetsDeploy" />
-      <TotalIncomePopup v-model="totalIncomeInfo.show" :filter-day="timeInfo" />
+      <AccIncome
+        :unit-info="unitInfo.defaultUnit"
+        :filter-day="timeInfo"
+        @show-modal="showTheTotalIncome"
+      />
+      <DayIncome :unit-info="unitInfo.defaultUnit" :filter-day="timeInfo" />
+      <AssetsTrend :unit-info="unitInfo.defaultUnit" :filter-day="timeInfo" />
+      <AssetsDeploy :unit-info="unitInfo.defaultUnit" :filter-day="timeInfo" />
+      <TotalIncomePopup
+        v-model="totalIncomeInfo.show"
+        :unit-info="unitInfo.defaultUnit"
+        :filter-day="timeInfo"
+      />
     </div>
     <div>
       <div

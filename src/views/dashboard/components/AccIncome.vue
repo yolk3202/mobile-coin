@@ -4,9 +4,15 @@ import { useDarkMode } from "@/hooks/useToggleDarkMode";
 import Chart from "@/components/Chart/index.vue";
 import { getCoinChartApi } from "@/api/coin";
 
+const DATA__VALUE = "value";
+const DATA__RATIO = "ratio";
 const TYPE = "line";
 const emit = defineEmits(["showModal"]);
 const props = defineProps({
+  unitInfo: {
+    type: Object,
+    required: true
+  },
   filterDay: {
     type: Object,
     required: true,
@@ -17,6 +23,13 @@ const props = defineProps({
       };
     }
   }
+});
+const componentData = reactive({
+  loading: true,
+  srcData: {},
+  flag: false,
+  rate: 1,
+  unit: ""
 });
 let apiData = ref([]);
 // 初始化时间是 最近一天数据
@@ -51,7 +64,7 @@ const lineOption = reactive({
         });
       } else {
         params.forEach(item => {
-          curInfo.vals.push(`${unit}${item.value}`);
+          curInfo.vals.push(`${componentData.unit}${item.value}`);
         });
       }
       return;
@@ -79,24 +92,31 @@ const lineOption = reactive({
 });
 const setChartsData = checkedVal => {
   // 选择 type 与 checkedVal 相同的数据
+  const { rate, unit } = componentData;
   lineOption.series = [];
   curInfo.vals = [];
   // 收集所有数据
   let arr = [];
   apiData.value.forEach(item => {
+    let dataValues = [...item.value];
     if (item.type === checkedVal) {
+      if (checkedVal === DATA__VALUE) {
+        dataValues.forEach((val, index) => {
+          dataValues[index] = (val * rate).toFixed(2);
+        });
+      }
       const data = {
         name: item.name,
         type: TYPE,
-        data: item.value,
+        data: dataValues,
         smooth: true,
         symbol: "none"
       };
-      arr.push(...item.value);
+      arr.push(...dataValues);
       if (item.unit === "%") {
-        curInfo.vals.push(`${item.value[item.value.length - 1]}${item.unit}`);
+        curInfo.vals.push(`${dataValues[dataValues.length - 1]}${item.unit}`);
       } else {
-        curInfo.vals.push(`${item.unit}${item.value[item.value.length - 1]}`);
+        curInfo.vals.push(`${unit}${dataValues[dataValues.length - 1]}`);
       }
       lineOption.series.push(data);
     }
@@ -116,9 +136,26 @@ const getChartData = ({ startDay, endDay }) => {
       curInfo.time = data.xdata[data.xdata.length - 1];
       lineOption.xAxis.data = data.xdata;
       setChartsData(checked.value);
+      componentData.flag = true;
     }
   });
 };
+
+watch(
+  () => props.unitInfo,
+  newVal => {
+    componentData.rate = newVal.rate;
+    componentData.unit = newVal.unit;
+    if (componentData.flag) {
+      setChartsData(checked.value);
+    }
+  },
+  {
+    deep: true,
+    immediate: true
+  }
+);
+
 watch(
   () => props.filterDay,
   newVal => {
@@ -128,7 +165,6 @@ watch(
   },
   {
     deep: true,
-    immediate: true
   }
 );
 
@@ -189,7 +225,7 @@ const refLineOption = ref(lineOption);
             class="leading-8 text-center h-full"
             :class="useDarkMode() ? 'text-slate-400' : 'text-slate-800'"
           >
-            {{ checked === "value" ? "₮" : "%" }}
+            {{ checked === "value" ? componentData.unit : "%" }}
           </div>
         </template>
       </van-switch>
