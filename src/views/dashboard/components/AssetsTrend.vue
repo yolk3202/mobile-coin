@@ -1,11 +1,15 @@
 <script setup>
 import { ref, reactive, watch } from "vue";
+import { showDialog } from "vant";
 import Chart from "@/components/Chart/index.vue";
 import { getCoinTrendChartApi } from "@/api/coin";
 
 const TYPE = "line";
-const emit = defineEmits(["showModal"]);
 const props = defineProps({
+  unitInfo: {
+    type: Object,
+    required: true
+  },
   filterDay: {
     type: Object,
     required: true,
@@ -16,6 +20,13 @@ const props = defineProps({
       };
     }
   }
+});
+const componentData = reactive({
+  loading: true,
+  srcData: {},
+  flag: false,
+  rate: 1,
+  unit: ""
 });
 let apiData = ref([]);
 // 初始化时间是 最近一天数据
@@ -30,16 +41,16 @@ const lineOption = reactive({
     axisPointer: { type: "line" },
     formatter: function (params) {
       curInfo.time = params[0].name;
-      let unit = "";
-      for (let i = 0; i < apiData.value.length; i += 1) {
-        const item = apiData.value[i];
-        if (item.name === params[0].seriesName) {
-          unit = item.unit;
-        }
-      }
+      // let unit = "";
+      // for (let i = 0; i < apiData.value.length; i += 1) {
+      //   const item = apiData.value[i];
+      //   if (item.name === params[0].seriesName) {
+      //     unit = item.unit;
+      //   }
+      // }
       curInfo.vals = [];
       params.forEach(item => {
-        curInfo.vals.push(`${unit}${item.value}`);
+        curInfo.vals.push(`${componentData.unit}${item.value}`);
       });
       return;
     }
@@ -63,7 +74,28 @@ const lineOption = reactive({
   },
   series: []
 });
-
+const setChartsData = () => {
+  const { rate, unit } = componentData;
+  lineOption.series = [];
+  curInfo.vals = [];
+  // 收集所有数据
+  let arr = [];
+  apiData.value.forEach(item => {
+    let dataValues = item.value.map(val => (val * rate).toFixed(2));
+    const data = {
+      name: item.name,
+      type: TYPE,
+      data: dataValues,
+      smooth: true,
+      symbol: "none"
+    };
+    arr.push(...dataValues);
+    curInfo.vals.push(`${unit}${dataValues[dataValues.length - 1]}`);
+    lineOption.series.push(data);
+  });
+  lineOption.yAxis.min = Math.min(...arr);
+  lineOption.yAxis.max = Math.max(...arr);
+};
 const getChartData = ({ startDay, endDay }) => {
   getCoinTrendChartApi({
     startDay,
@@ -75,27 +107,27 @@ const getChartData = ({ startDay, endDay }) => {
       apiData.value.push(...data.data);
       curInfo.time = data.xdata[data.xdata.length - 1];
       lineOption.xAxis.data = data.xdata;
-      lineOption.series = [];
-      curInfo.vals = [];
-      // 收集所有数据
-      let arr = [];
-      data.data.forEach(item => {
-        const data = {
-          name: item.name,
-          type: TYPE,
-          data: item.value,
-          smooth: true,
-          symbol: "none"
-        };
-        arr.push(...item.value);
-        curInfo.vals.push(`${item.unit}${item.value[item.value.length - 1]}`);
-        lineOption.series.push(data);
-      });
-      lineOption.yAxis.min = Math.min(...arr);
-      lineOption.yAxis.max = Math.max(...arr);
+      setChartsData();
+      componentData.flag = true;
     }
   });
 };
+
+watch(
+  () => props.unitInfo,
+  newVal => {
+    componentData.rate = newVal.rate;
+    componentData.unit = newVal.unit;
+    if (componentData.flag) {
+      setChartsData();
+    }
+  },
+  {
+    deep: true,
+    immediate: true
+  }
+);
+
 watch(
   () => props.filterDay,
   newVal => {
@@ -108,6 +140,17 @@ watch(
     immediate: true
   }
 );
+
+// 资产走势
+const showTheAssetsTrend = () => {
+  showDialog({
+    title: "资产走势",
+    message: "资产总值= 币种权益x最新价"
+  }).then(() => {
+    // on close
+  });
+};
+
 const refLineOption = ref(lineOption);
 </script>
 <template>
@@ -116,11 +159,7 @@ const refLineOption = ref(lineOption);
       <div class="text-[16px]">
         资产走势
         <van-icon
-          @click="
-            () => {
-              emit('showModal');
-            }
-          "
+          @click="showTheAssetsTrend"
           class="ml-[4px] text-zinc-500"
           name="info-o"
         />

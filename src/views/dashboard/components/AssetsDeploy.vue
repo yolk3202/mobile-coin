@@ -1,11 +1,11 @@
 <script setup>
 import { ref, reactive, watch, computed } from "vue";
+import { showDialog } from "vant";
 import Chart from "@/components/Chart/index.vue";
 import { getCoinDistributionChartApi } from "@/api/coin";
 import { countDecimals } from "@/utils/common";
 
 // const TYPE = "pie";
-const emit = defineEmits(["showModal"]);
 const props = defineProps({
   filterDay: {
     type: Object,
@@ -183,6 +183,16 @@ const chartHeight = computed(() => {
   }
 });
 
+// 资产分布
+const showTheAssetsDeploy = () => {
+  showDialog({
+    title: "资产分布",
+    message: "账户中各类资产的数量和占比，及其折合本地货币的价值"
+  }).then(() => {
+    // on close
+  });
+};
+
 // 饼图
 // const data = [
 //   { value: 1048, name: "USTD" },
@@ -196,11 +206,7 @@ const refPieOption = ref(pieOption);
       <div class="text-[16px]">
         资产分布
         <van-icon
-          @click="
-            () => {
-              emit('showModal');
-            }
-          "
+          @click="showTheAssetsDeploy"
           class="ml-[4px] text-zinc-500"
           name="info-o"
         />
